@@ -40,9 +40,17 @@
         <label>持续泄漏时间 <span>(min)</span>
           <input id="tsd_min" type="number" step="1" min="1" value="15">
         </label>
-        <label>液池面积 as <span>(m²)</span>
+        <label id="as_group">液池面积 as <span>(m²，仅蒸发池)</span>
           <input id="as_" type="number" step="1" min="1" value="100">
         </label>
+        <div id="jet_group" class="hidden">
+          <label>喷口直径 <span>(m)</span>
+            <input id="jet_d" type="number" step="0.01" min="0.01" value="0.25">
+          </label>
+          <label>喷口离地高度 <span>(m)</span>
+            <input id="jet_h" type="number" step="0.1" min="0" value="2.0">
+          </label>
+        </div>
         <label>源类型
           <select id="idspl">
             <option value="1" selected>地面蒸发池（液体积聚蒸发）</option>

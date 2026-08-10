@@ -2,7 +2,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const defaults = {
+const defaults = { jet_d: "0.25", jet_h: "2.0",
   qs: "1.0", tsd_min: "15", as_: "100", idspl: "1",
   ua: "3.0", wind_dir_sel: "225", wind_dir: "225",
   ta_c: "27", press: "1013.25", rh: "60", stab: "D",
@@ -20,6 +20,7 @@ function resetForm() {
     else el.value = v;
   }
   syncWindDir();
+  syncSourceType();
 }
 
 function syncWindDir() {
@@ -29,11 +30,17 @@ function syncWindDir() {
   if (!custom) $("wind_dir").value = sel;
 }
 
+function syncSourceType() {
+  const jet = $("idspl").value === "3";
+  $("as_group").classList.toggle("hidden", jet);
+  $("jet_group").classList.toggle("hidden", !jet);
+}
+
 function collectParams() {
   const windSel = $("wind_dir_sel").value;
   return {
     qs: $("qs").value, tsd_min: $("tsd_min").value, as_: $("as_").value,
-    idspl: $("idspl").value, ua: $("ua").value,
+    idspl: $("idspl").value, jet_d: $("jet_d").value, jet_h: $("jet_h").value, ua: $("ua").value,
     wind_dir: windSel === "custom" ? $("wind_dir").value : windSel,
     ta_c: $("ta_c").value, press: $("press").value, rh: $("rh").value,
     stab: $("stab").value, zp: $("zp").value, times: $("times").value.replace(/[，、；;]/g, ",").replace(/\s+/g, ""),
@@ -127,7 +134,7 @@ function renderResults(res) {
   if (!res) return;
   const s = res.summary || {};
   const lines = [
-    "工况：泄漏率 " + (s.qs || "-") + "，持续 " + (s.tsd_min || "-") + "，" +
+    "工况：" + (s.src_type || "") + "；泄漏率 " + (s.qs || "-") + "，持续 " + (s.tsd_min || "-") + "，" +
     "风速 " + (s.ua || "-") + "，气温 " + (s.ta || "-") + "，气压 " + (s.press || "-") + "，" +
     "风向 " + (s.wind_dir || "-") + "，稳定度 " + (s.stab || "-") + "，分析高度 " + (s.zp || "-")
   ];
@@ -211,6 +218,8 @@ function renderFiles(files) {
 
 document.addEventListener("DOMContentLoaded", () => {
   resetForm();
+  syncSourceType();
+  $("idspl").addEventListener("change", syncSourceType);
   $("wind_dir_sel").addEventListener("change", syncWindDir);
   $("btn-run").addEventListener("click", runJob);
   $("btn-reset").addEventListener("click", () => { resetForm(); setStatus(false); });

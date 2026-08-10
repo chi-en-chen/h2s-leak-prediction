@@ -31,14 +31,8 @@ VMIN_PPM   = 0.01
 
 
 def build_input(params, path):
-    p = default_h2s_params()
-    p["as"] = params["as_"]
-    for k in ("idspl", "qs", "tsd", "ts", "hs", "us", "ws", "za", "ua",
-              "ta", "rh", "stab", "z0", "tav", "xffm"):
-        p[k] = params[k]
-    p["zp1"] = params["zp"]
-    write_slab_input(p, path, props=H2S_PROPS)
-    return path
+    """生成 SLAB 输入文件(复用 h2s_sensor_analysis 的源类型几何换算)."""
+    return base.build_input(params, path)
 
 
 def load_field(args, params):

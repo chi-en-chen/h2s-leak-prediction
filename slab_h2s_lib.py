@@ -250,23 +250,29 @@ def parse_predict(path):
         raise ValueError("未找到浓度等值线参数表头")
 
     mode = "puff" if "cc(t)" in lines[header_i] else "continuous"
+    ncol = 10 if mode == "continuous" else 9
 
     rows = []
     k = header_i + 1
     while k < len(lines) and len(rows) < 61:
         nums = re.findall(_NUM, lines[k])
-        if len(nums) >= 9:
-            rows.append([float(v) for v in nums[:10]])
-        elif len(nums) < 9 and len(nums) > 0 and "1" in lines[k].strip():
-            pass
+        if len(nums) >= ncol:
+            rows.append([float(v) for v in nums[:ncol]])
         k += 1
+    if not rows:
+        raise ValueError("SLAB 输出未解析到浓度等值线参数, 请检查输入参数")
     rows = np.array(rows, dtype=float)
 
     if mode == "continuous":
         x, cc, b, betac, zc, sig, t, xc, bx, betax = rows.T
     else:
-        t, cc, b, betac, zc, sig, xc, bx, betax = rows.T[:9]
+        t, cc, b, betac, zc, sig, xc, bx, betax = rows.T
         x = t
+
+    if np.isfinite(cc).sum() < 5:
+        raise ValueError(
+            "SLAB 计算结果异常(浓度多为无效值), 请检查源类型与源参数是否合理"
+            "(如垂直喷口需设置喷口直径与高度)")
 
     # ---- z 平面表(用于校验) ----
     zplane = None

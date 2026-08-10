@@ -21,6 +21,7 @@ import csv
 import os
 import sys
 
+import math
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -57,6 +58,8 @@ CONFIG = dict(
     hs=0.0,             # 源高度 m
     us=0.0,             # 水平射流速度 m/s (idspl=2)
     ws=0.0,             # 垂直喷口速度 m/s (idspl=3)
+    jet_d=0.25,         # 喷口直径 m (idspl=3 垂直喷口, 换算截面积)
+    jet_h=2.0,          # 喷口离地高度 m (idspl=3 垂直喷口)
     # -- 微气象要素 --------------------------------------------
     za=10.0,            # 风速测量高度 m
     ua=3.0,             # 环境风速 m/s (现场实测)
@@ -123,10 +126,27 @@ def ppm_to_mgm3(ppm, params):
     return np.asarray(ppm, float) * H2S_MW * P / (R * params["ta"])
 
 
+def source_geometry(params):
+    """按源类型给出 SLAB 所需的源面积与源高度.
+
+    idspl=1/4 蒸发池: 使用 as_(液池面积), 源高 0
+    idspl=2   水平射流: 使用 as_(喷口截面积), 源高 hs
+    idspl=3   垂直喷口: 由喷口直径 jet_d 换算截面积, 源高 jet_h
+    """
+    idspl = int(params.get("idspl", 1))
+    if idspl == 3:
+        d = float(params.get("jet_d", 0.25))
+        h = float(params.get("jet_h", 2.0))
+        return math.pi * (d / 2.0) ** 2, h
+    return float(params.get("as_", 100.0)), float(params.get("hs", 0.0))
+
+
 def build_input(params, path="h2s_sensor_input.txt"):
     p = default_h2s_params()
-    p["as"] = params["as_"]
-    for k in ("idspl", "qs", "tsd", "ts", "hs", "us", "ws", "za", "ua",
+    as_src, hs_src = source_geometry(params)
+    p["as"] = as_src
+    p["hs"] = hs_src
+    for k in ("idspl", "qs", "tsd", "ts", "us", "ws", "za", "ua",
               "ta", "rh", "stab", "z0", "tav", "xffm"):
         p[k] = params[k]
     p["zp1"] = params["zp"]

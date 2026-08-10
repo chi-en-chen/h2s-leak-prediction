@@ -24,6 +24,7 @@ import csv
 import os
 import sys
 
+import math
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
@@ -97,8 +98,15 @@ JET_PRESET = dict(
 # ------------------------------------------------------------
 def build_input(params, path="h2s_input.txt"):
     p = default_h2s_params()
-    p["as"] = params["as_"]
-    for k in ("idspl", "qs", "tsd", "ts", "hs", "us", "ws", "za", "ua",
+    if int(params.get("idspl", 1)) == 3:
+        # 垂直喷口: 由喷口直径换算截面积, 源高取喷口离地高度
+        d = float(params.get("jet_d", 0.25))
+        p["as"] = math.pi * (d / 2.0) ** 2
+        p["hs"] = float(params.get("jet_h", 2.0))
+    else:
+        p["as"] = params["as_"]
+        p["hs"] = params.get("hs", 0.0)
+    for k in ("idspl", "qs", "tsd", "ts", "us", "ws", "za", "ua",
               "ta", "rh", "stab", "z0", "tav", "xffm"):
         p[k] = params[k]
     p["zp1"] = params["zp"]

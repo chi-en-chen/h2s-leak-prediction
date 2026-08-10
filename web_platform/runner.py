@@ -75,9 +75,18 @@ def make_params(form):
     ua = _to_num(form, "ua", 3.0)
     if ua <= 0:
         raise ValueError("风速 ua 必须大于 0")
+    idspl = int(float(_to_num(form, "idspl", 1)))
+    jet_d = _to_num(form, "jet_d", 0.25)
+    jet_h = _to_num(form, "jet_h", 2.0)
+    if idspl == 3 and jet_d <= 0:
+        raise ValueError("喷口直径必须大于 0")
+    if idspl == 3 and jet_h < 0:
+        raise ValueError("喷口高度不能为负")
     p = dict(base.CONFIG)
     p.update(
-        idspl=int(float(_to_num(form, "idspl", 1))),
+        idspl=idspl,
+        jet_d=jet_d,
+        jet_h=jet_h,
         qs=qs,
         tsd=_to_num(form, "tsd_min", 15.0) * 60.0,
         as_=_to_num(form, "as_", 100.0),
@@ -262,7 +271,11 @@ def build_results(job, field, p, slices, stats):
                                 mgm3="%.4g" % base.ppm_to_mgm3(r["ppm"], p),
                                 status="告警" if r["alarm"] else "正常"))
 
+    src_name = "地面蒸发池" if p["idspl"] == 1 else "垂直喷口"
+    geom = "液池面积 %.3g m²" % p["as_"] if p["idspl"] == 1 else \
+        "喷口直径 %.2g m, 离地高度 %.2g m" % (p["jet_d"], p["jet_h"])
     summary = dict(
+        src_type="%s（%s）" % (src_name, geom),
         qs="%.3g kg/s" % p["qs"],
         tsd_min="%g min" % (p["tsd"] / 60.0),
         ua="%.2g m/s" % p["ua"],
