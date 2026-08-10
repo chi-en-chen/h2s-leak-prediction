@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 油井 H2S 泄漏扩散 - 核心可视化元素 (SLAB 重气模型输出)
  1) 传感器点位: 4 个传感器位于油井正北/正西/正南/正东, 距井口 60 m
@@ -155,25 +155,31 @@ def draw_panel(ax, field, params, t, beta_deg):
                 bbox=dict(boxstyle="round,pad=0.22", fc="white", ec=fc,
                           alpha=0.88, lw=0.8))
 
-    # ---- 人员疏散路线 (危险区 -> 外围安全区) ----
+    # ---- 人员疏散路线 (危险区 -> 外围安全区, 逆风 + 两侧偏移) ----
     front = float(np.max(np.where(C >= 1.0, xd[:, None], 0.0)))
     half = float(np.max(np.abs(np.where(C >= 1.0, yc[None, :], 0.0))))
     ext = max(420.0, (front + half) * 0.75)
-    for dE, dN in ((0.0, 1.0), (-0.72, 0.72), (-1.0, 0.0)):
+    upwind_deg = (beta_deg + 180.0) % 360.0
+    for off in (0.0, -45.0, 45.0):
+        a = np.radians(upwind_deg + off)
+        dE, dN = np.sin(a), np.cos(a)
         p0 = np.array([0.0, 0.0])
         p1 = np.array([dE, dN]) * ext
         arr = FancyArrowPatch(p0, p1, arrowstyle="-|>", mutation_scale=26,
                               lw=2.6, color="#1F6FB2", alpha=0.95, zorder=5)
         ax.add_patch(arr)
-    ax.text(8.0, ext * 0.94, "人员疏散路线", color="#1F6FB2", fontsize=10,
-            fontweight="bold", zorder=6)
+    labE = np.sin(np.radians(upwind_deg)) * ext * 0.88
+    labN = np.cos(np.radians(upwind_deg)) * ext * 0.88
+    ax.text(labE, labN, "人员疏散路线", color="#1F6FB2", fontsize=10,
+            fontweight="bold", ha="center", va="center", zorder=6)
 
-    # ---- 风向标注 (地理坐标) ----
+    # ---- 风向标注 (地理坐标, 沿下风向) ----
     m = ext
-    ax.annotate("", xy=(m * 0.35, 0.0), xytext=(0.0, 0.0),
+    wE, wN = np.sin(beta), np.cos(beta)
+    ax.annotate("", xy=(wE * m * 0.35, wN * m * 0.35), xytext=(0.0, 0.0),
                 arrowprops=dict(arrowstyle="-|>", color="#555555", lw=1.6))
-    ax.text(m * 0.37, m * 0.02, f"下风向 {beta_deg:.0f}°", fontsize=9,
-            color="#555555", va="center")
+    ax.text(wE * m * 0.42, wN * m * 0.42, f"下风向 {beta_deg:.0f}°", fontsize=9,
+            color="#555555", ha="center", va="center")
 
     # ---- 图幅自适应 ----
     lim = max(500.0, (front + half) * 0.707 * 1.15 + 260.0)
