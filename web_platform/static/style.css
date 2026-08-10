@@ -1,0 +1,93 @@
+:root{
+  --primary:#0f4c81;
+  --primary-dark:#0b3a63;
+  --accent:#e8842c;
+  --ok:#2e9e44;
+  --alert:#d50000;
+  --bg:#eef2f6;
+  --card:#ffffff;
+  --line:#d8e0e8;
+  --text:#23303c;
+  --muted:#6b7a88;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif;
+  line-height:1.6;
+}
+.hidden{display:none !important}
+
+/* 头部 */
+.site-header{background:linear-gradient(120deg,var(--primary-dark),var(--primary));color:#fff;padding:22px 28px}
+.header-inner{max-width:1280px;margin:0 auto}
+.site-header h1{margin:0;font-size:26px;letter-spacing:1px}
+.subtitle{margin:6px 0 0;opacity:.85;font-size:14px}
+
+main{max-width:1280px;margin:18px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin-bottom:16px;box-shadow:0 1px 3px rgba(16,60,90,.08)}
+.card h2{margin:0 0 12px;font-size:18px;color:var(--primary);border-left:4px solid var(--accent);padding-left:10px}
+
+/* 简介 */
+.intro-list{margin:0;padding-left:18px}
+.intro-list li{margin:4px 0;font-size:14px}
+
+/* 布局 */
+.layout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:1fr}}
+
+/* 表单 */
+fieldset{border:1px solid var(--line);border-radius:8px;margin:0 0 14px;padding:10px 12px 12px}
+legend{color:var(--primary);font-weight:bold;font-size:14px;padding:0 6px}
+label{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;font-size:13.5px}
+label span{color:var(--muted);font-size:12px}
+label.checkbox{justify-content:flex-start}
+input[type=number],input[type=text],select{
+  width:150px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;
+  font-size:13.5px;background:#fbfdff;color:var(--text);
+}
+label.checkbox input{width:auto;margin-right:8px}
+.actions{display:flex;gap:10px;margin-top:6px}
+button{
+  padding:9px 16px;border:none;border-radius:8px;cursor:pointer;font-size:14px;
+  font-family:inherit;transition:filter .15s;
+}
+button.primary{background:var(--primary);color:#fff;font-weight:bold;flex:1}
+button.primary:hover{filter:brightness(1.12)}
+button.primary:disabled{background:#9db4c8;cursor:not-allowed}
+#btn-reset{background:#e8edf2;color:var(--text)}
+#btn-reset:hover{background:#dbe3ea}
+.hint{color:var(--muted);font-size:12px;margin:10px 0 0}
+
+/* 状态区 */
+.status-box{padding:12px;background:#f5f8fb;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}
+.progress-track{height:14px;background:#dfe7ee;border-radius:8px;overflow:hidden}
+#progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#f2b04f);transition:width .6s}
+#progress-text{margin:8px 0 6px;font-size:13.5px;color:var(--primary);font-weight:bold}
+.log-box{max-height:150px;overflow:auto;background:#1e2a36;color:#cfe8ff;border-radius:6px;
+  padding:10px;font-size:12px;margin:0;white-space:pre-wrap;word-break:break-all}
+
+/* 结果区 */
+.result-panel{min-height:420px}
+#summary-line{margin:8px 0 12px;padding:10px 12px;background:#f0f7f0;border:1px solid #cfe3cf;
+  border-radius:8px;font-size:13px;color:#2f5d2f}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:2px solid var(--line);margin-bottom:14px}
+.tab{background:#eef2f6;color:var(--text);border-radius:8px 8px 0 0;padding:8px 14px;font-size:13.5px;border:none;cursor:pointer}
+.tab.active{background:var(--primary);color:#fff;font-weight:bold}
+.tab-pane h3{margin:4px 0 10px;font-size:15px;color:var(--primary)}
+.img-wrap{text-align:center;margin:6px 0 14px}
+.img-wrap img{max-width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+.table-wrap{overflow-x:auto;margin:6px 0 10px}
+.data-table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+.data-table th,.data-table td{border:1px solid var(--line);padding:7px 9px;text-align:center;white-space:nowrap}
+.data-table th{background:var(--primary);color:#fff;font-weight:bold}
+.data-table tr:nth-child(even){background:#f6f9fc}
+.ok{color:var(--ok);font-weight:bold}
+.alarm{color:var(--alert);font-weight:bold}
+.file-list{margin:0;padding-left:20px;font-size:14px}
+.file-list a{color:var(--primary);text-decoration:none}
+.file-list a:hover{text-decoration:underline}
+.note{color:var(--muted);font-size:12.5px}
+.empty-box{color:var(--muted);text-align:center;padding:70px 0;font-size:15px}
+
+.site-footer{text-align:center;color:var(--muted);font-size:12.5px;padding:18px;border-top:1px solid var(--line);margin-top:10px}

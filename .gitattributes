@@ -1,0 +1,11 @@
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.txt text eol=crlf
+*.csv text eol=crlf
+*.bat text eol=crlf
+*.FOR text eol=crlf
+*.RME text eol=crlf

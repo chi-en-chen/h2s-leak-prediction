@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 计算结果与运行产物(不随仓库上传)
+results_*/
+web_platform/jobs/
+OUTPR*
+nuout*
+input
+predict
+slabdiff*.txt
+web_platform/server.log
+web_platform/server_err.log
+web_platform/访问地址.txt
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
