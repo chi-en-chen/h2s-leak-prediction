@@ -1,200 +1,235 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>油井硫化氢(H2S)泄漏扩散预测平台</title>
-<link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-
-<header class="site-header">
-  <div class="header-inner">
-    <h1>油井硫化氢（H2S）泄漏扩散预测平台</h1>
-    <p class="subtitle">基于美国 SLAB 重气扩散模型 · 四传感器监测验证 · 应急风险分区可视化</p>
-  </div>
-</header>
-
-<main>
-  <section class="intro card">
-    <h2>平台功能</h2>
-    <ul class="intro-list">
-      <li><b>参数输入：</b>输入泄漏源参数（泄漏速率、持续时间、液池面积）与现场微气象要素（风速、风向、气温、气压、湿度、大气稳定度）</li>
-      <li><b>模型计算：</b>调用美国 SLAB 重气扩散模型，计算 H2S 云团随时间的三维浓度分布</li>
-      <li><b>分时段输出：</b>输出 1、3、5、15 分钟时刻的云团厚度、横向铺展范围、空间浓度分布</li>
-      <li><b>核心可视化：</b>传感器点位（正北/正西/正南/正东，距井口 60 m）、重气云团分级渲染、等值线与应急风险分区、疏散路线</li>
-      <li><b>动态演示：</b>生成扩散云团随时间演变的动画（GIF），便于应急演练与汇报</li>
-      <li><b>传感器告警：</b>显示四个传感器实时浓度预测与正常/告警状态（告警阈值 10 ppm）</li>
-    </ul>
-  </section>
-
-  <div class="layout">
-    <aside class="card params-panel">
-      <h2>参数输入</h2>
-
-      <fieldset>
-        <legend>泄漏源参数</legend>
-        <label>泄漏速率 qs <span>(kg/s)</span>
-          <input id="qs" type="number" step="0.01" min="0.001" value="1.0">
-        </label>
-        <label>持续泄漏时间 <span>(min)</span>
-          <input id="tsd_min" type="number" step="1" min="1" value="15">
-        </label>
-        <label id="as_group">液池面积 as <span>(m²，仅蒸发池)</span>
-          <input id="as_" type="number" step="1" min="1" value="100">
-        </label>
-        <div id="jet_group" class="hidden">
-          <label>喷口直径 <span>(m)</span>
-            <input id="jet_d" type="number" step="0.01" min="0.01" value="0.25">
-          </label>
-          <label>喷口离地高度 <span>(m)</span>
-            <input id="jet_h" type="number" step="0.1" min="0" value="2.0">
-          </label>
-        </div>
-        <label>源类型
-          <select id="idspl">
-            <option value="1" selected>地面蒸发池（液体积聚蒸发）</option>
-            <option value="3">垂直喷口（井口高速喷出）</option>
-          </select>
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>现场微气象</legend>
-        <label>环境风速 ua <span>(m/s)</span>
-          <input id="ua" type="number" step="0.1" min="0.1" value="3.0">
-        </label>
-        <label>风向（来向）
-          <select id="wind_dir_sel">
-            <option value="225" selected>西南风（225°）</option>
-            <option value="0">北风（0°）</option>
-            <option value="45">东北风（45°）</option>
-            <option value="90">东风（90°）</option>
-            <option value="135">东南风（135°）</option>
-            <option value="180">南风（180°）</option>
-            <option value="270">西风（270°）</option>
-            <option value="315">西北风（315°）</option>
-            <option value="custom">自定义角度…</option>
-          </select>
-        </label>
-        <label id="wind_dir_custom" class="hidden">风向角度 <span>(°)</span>
-          <input id="wind_dir" type="number" step="1" min="0" max="360" value="225">
-        </label>
-        <label>环境气温 <span>(°C)</span>
-          <input id="ta_c" type="number" step="0.5" value="27">
-        </label>
-        <label>环境气压 <span>(hPa)</span>
-          <input id="press" type="number" step="0.01" value="1013.25">
-        </label>
-        <label>相对湿度 <span>(%)</span>
-          <input id="rh" type="number" step="1" min="0" max="100" value="60">
-        </label>
-        <label>大气稳定度
-          <select id="stab">
-            <option value="A">A（强不稳定）</option>
-            <option value="B">B（不稳定）</option>
-            <option value="C">C（弱不稳定）</option>
-            <option value="D" selected>D（中性）</option>
-            <option value="E">E（弱稳定）</option>
-            <option value="F">F（稳定）</option>
-          </select>
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>计算设置</legend>
-        <label>分析高度（呼吸带）<span>(m)</span>
-          <input id="zp" type="number" step="0.1" min="0.1" value="1.5">
-        </label>
-        <label>分析时刻 <span>(min，逗号分隔)</span>
-          <input id="times" type="text" value="1,3,5,15">
-        </label>
-        <label class="checkbox">
-          <input id="make_anim" type="checkbox" checked>
-          生成扩散动态动画（GIF）
-        </label>
-        <label>动画时长 <span>(min)</span>
-          <input id="anim_min" type="number" step="1" min="1" value="15">
-        </label>
-      </fieldset>
-
-      <div class="actions">
-        <button id="btn-run" class="primary">开始计算</button>
-        <button id="btn-reset">恢复默认</button>
-      </div>
-      <p class="hint">提示：单次计算约需 1~3 分钟，动画生成约需 1~2 分钟。</p>
-    </aside>
-
-    <section class="card result-panel">
-      <h2>计算结果</h2>
-
-      <div id="status-box" class="status-box hidden">
-        <div class="progress-track"><div id="progress-bar"></div></div>
-        <div id="progress-text">等待任务开始 …</div>
-        <pre id="log-box" class="log-box"></pre>
-      </div>
-
-      <div id="result-box" class="hidden">
-        <nav class="tabs" id="tabs">
-          <button class="tab active" data-tab="core">核心可视化</button>
-          <button class="tab" data-tab="heatmap">浓度热力云图</button>
-          <button class="tab" data-tab="anim">扩散动画</button>
-          <button class="tab" data-tab="sensors">传感器读数</button>
-          <button class="tab" data-tab="metrics">云团特征</button>
-          <button class="tab" data-tab="files">文件下载</button>
-        </nav>
-
-        <div id="summary-line" class="summary-line"></div>
-
-        <div class="tab-pane" id="tab-core">
-          <h3>核心可视化（四时刻）</h3>
-          <div class="img-wrap"><img id="img-core-all" alt="核心可视化四时刻"></div>
-          <h3>核心可视化（末时刻大图）</h3>
-          <div class="img-wrap"><img id="img-core-hero" alt="核心可视化末时刻"></div>
-          <p class="note">图中包含：四传感器点位（绿=正常 / 红=告警）、半透明重气云团（浅黄→橙→深红对应低→中→高浓度）、
-            1/10/100 ppm 等值线（警戒/危险/毒性阈值边界）、红色实线核心应急隔离区、黄色虚线警戒疏散区域、蓝色疏散箭头。</p>
-        </div>
-
-        <div class="tab-pane hidden" id="tab-heatmap">
-          <h3>浓度热力云图（1 / 3 / 5 / 15 分钟）</h3>
-          <div class="img-wrap"><img id="img-heatmap" alt="浓度热力云图"></div>
-        </div>
-
-        <div class="tab-pane hidden" id="tab-anim">
-          <h3>H2S 云团扩散动态动画</h3>
-          <div class="img-wrap"><img id="img-anim" alt="扩散动画"></div>
-          <p class="note">动画展示水平足迹与中心线垂直剖面随时间演变（对数浓度刻度）。</p>
-        </div>
-
-        <div class="tab-pane hidden" id="tab-sensors">
-          <h3>四传感器浓度预测（ppm）</h3>
-          <div class="table-wrap"><table id="tbl-sensors" class="data-table"></table></div>
-          <p class="note">告警阈值 10 ppm：绿色=正常，红色=告警。传感器布局：S1 正北、S2 正西、S3 正南、S4 正东，距井口 60 m。</p>
-        </div>
-
-        <div class="tab-pane hidden" id="tab-metrics">
-          <h3>分时段云团特征汇总</h3>
-          <div class="table-wrap"><table id="tbl-metrics" class="data-table"></table></div>
-          <p class="note">云团边界取 1 ppm（TLV 参考阈值）；厚度为云团最大高度；宽度为最大横向铺展；面积为 1 ppm 覆盖范围。</p>
-        </div>
-
-        <div class="tab-pane hidden" id="tab-files">
-          <h3>结果文件下载</h3>
-          <ul id="file-list" class="file-list"></ul>
-        </div>
-      </div>
-
-      <div id="empty-box" class="empty-box">
-        <p>输入参数后点击「开始计算」，结果将在此展示。</p>
-      </div>
-    </section>
-  </div>
-</main>
-
-<footer class="site-footer">
-  <p>平台基于美国 SLAB 重气扩散模型（Slab.exe + 浓度场重构）开发，结果用于风险评估与应急决策参考。</p>
-</footer>
-
-<script src="/static/app.js?v=2"></script>
-</body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>油井硫化氢(H2S)泄漏扩散预测平台</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <h1>油井硫化氢（H2S）泄漏扩散预测平台</h1>
+    <p class="subtitle">基于美国 SLAB 重气扩散模型 · 四传感器监测验证 · 应急风险分区可视化</p>
+  </div>
+</header>
+
+<main>
+  <section class="intro card">
+    <h2>平台功能</h2>
+    <ul class="intro-list">
+      <li><b>参数输入：</b>输入泄漏源参数（泄漏速率、持续时间、液池面积）与现场微气象要素（风速、风向、气温、气压、湿度、大气稳定度）</li>
+      <li><b>模型计算：</b>调用美国 SLAB 重气扩散模型，计算 H2S 云团随时间的三维浓度分布</li>
+      <li><b>分时段输出：</b>输出 1、3、5、15 分钟时刻的云团厚度、横向铺展范围、空间浓度分布</li>
+      <li><b>核心可视化：</b>传感器点位（正北/正西/正南/正东，距井口可调）、重气云团分级渲染、等值线与应急风险分区、疏散路线</li>
+      <li><b>动态演示：</b>生成扩散云团随时间演变的动画（GIF），便于应急演练与汇报</li>
+      <li><b>传感器告警：</b>显示四个传感器实时浓度预测与正常/告警状态（告警阈值 10 ppm）</li>
+    </ul>
+  </section>
+
+  <div class="layout">
+    <aside class="card params-panel">
+      <h2>参数输入</h2>
+
+      <fieldset>
+        <legend>泄漏源参数</legend>
+        <label>泄漏速率 qs <span>(kg/s)</span>
+          <input id="qs" type="number" step="0.01" min="0.001" value="1.0">
+        </label>
+        <label>持续泄漏时间 <span>(min)</span>
+          <input id="tsd_min" type="number" step="1" min="1" value="15">
+        </label>
+        <label id="as_group">液池面积 as <span>(m²，仅蒸发池)</span>
+          <input id="as_" type="number" step="1" min="1" value="100">
+        </label>
+        <div id="jet_group" class="hidden">
+          <label>喷口直径 <span>(m)</span>
+            <input id="jet_d" type="number" step="0.01" min="0.01" value="0.25">
+          </label>
+          <label>喷口离地高度 <span>(m)</span>
+            <input id="jet_h" type="number" step="0.1" min="0" value="2.0">
+          </label>
+        </div>
+        <label>源类型
+          <select id="idspl">
+            <option value="1" selected>地面蒸发池（液体积聚蒸发）</option>
+            <option value="3">垂直喷口（井口高速喷出）</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>气体参数（可自定义）</legend>
+        <label>预设气体
+          <select id="gas_preset">
+            <option value="h2s" selected>H2S（硫化氢）</option>
+            <option value="nh3">NH3（氨气）</option>
+            <option value="cl2">Cl2（氯气）</option>
+            <option value="so2">SO2（二氧化硫）</option>
+            <option value="propane">丙烷</option>
+            <option value="butane">正丁烷</option>
+            <option value="custom">自定义...</option>
+          </select>
+        </label>
+        <label>分子量 wms <span>(kg/mol)</span>
+          <input id="wms" type="number" step="0.0001" min="0.001" value="0.034081">
+        </label>
+        <label>沸点 tbp <span>(K)</span>
+          <input id="tbp" type="number" step="1" min="77" value="213">
+        </label>
+        <label>液相密度 <span>(kg/m³)</span>
+          <input id="rhosl" type="number" step="1" min="1" value="949">
+        </label>
+        <label>汽化潜热 <span>(kJ/kg)</span>
+          <input id="dhe_kj" type="number" step="1" min="10" value="548">
+        </label>
+        <label>气相比热 <span>(J/kg·K)</span>
+          <input id="cps" type="number" step="1" min="100" value="1010">
+        </label>
+        <label>液相比热 <span>(J/kg·K)</span>
+          <input id="cpsl" type="number" step="1" min="100" value="1800">
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend>现场微气象</legend>
+        <label>环境风速 ua <span>(m/s)</span>
+          <input id="ua" type="number" step="0.1" min="0.1" value="3.0">
+        </label>
+        <label>风向（来向）
+          <select id="wind_dir_sel">
+            <option value="225" selected>西南风（225°）</option>
+            <option value="0">北风（0°）</option>
+            <option value="45">东北风（45°）</option>
+            <option value="90">东风（90°）</option>
+            <option value="135">东南风（135°）</option>
+            <option value="180">南风（180°）</option>
+            <option value="270">西风（270°）</option>
+            <option value="315">西北风（315°）</option>
+            <option value="custom">自定义角度…</option>
+          </select>
+        </label>
+        <label id="wind_dir_custom" class="hidden">风向角度 <span>(°)</span>
+          <input id="wind_dir" type="number" step="1" min="0" max="360" value="225">
+        </label>
+        <label>环境气温 <span>(°C)</span>
+          <input id="ta_c" type="number" step="0.5" value="27">
+        </label>
+        <label>环境气压 <span>(hPa)</span>
+          <input id="press" type="number" step="0.01" value="1013.25">
+        </label>
+        <label>相对湿度 <span>(%)</span>
+          <input id="rh" type="number" step="1" min="0" max="100" value="60">
+        </label>
+        <label>大气稳定度
+          <select id="stab">
+            <option value="A">A（强不稳定）</option>
+            <option value="B">B（不稳定）</option>
+            <option value="C">C（弱不稳定）</option>
+            <option value="D" selected>D（中性）</option>
+            <option value="E">E（弱稳定）</option>
+            <option value="F">F（稳定）</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>计算设置</legend>
+        <label>分析高度（呼吸带）<span>(m)</span>
+          <input id="zp" type="number" step="0.1" min="0.1" value="1.5">
+        </label>
+        <label>传感器距井口距离 <span>(m, 四传感器正方形)</span>
+          <input id="sensor_dist" type="number" step="10" min="20" max="1000" value="60">
+        </label>
+        <label>分析时刻 <span>(min，逗号分隔)</span>
+          <input id="times" type="text" value="1,3,5,15">
+        </label>
+        <label class="checkbox">
+          <input id="make_anim" type="checkbox" checked>
+          生成扩散动态动画（GIF）
+        </label>
+        <label>动画时长 <span>(min)</span>
+          <input id="anim_min" type="number" step="1" min="1" value="15">
+        </label>
+      </fieldset>
+
+      <div class="actions">
+        <button id="btn-run" class="primary">开始计算</button>
+        <button id="btn-reset">恢复默认</button>
+      </div>
+      <p class="hint">提示：单次计算约需 1~3 分钟，动画生成约需 1~2 分钟。</p>
+    </aside>
+
+    <section class="card result-panel">
+      <h2>计算结果</h2>
+
+      <div id="status-box" class="status-box hidden">
+        <div class="progress-track"><div id="progress-bar"></div></div>
+        <div id="progress-text">等待任务开始 …</div>
+        <pre id="log-box" class="log-box"></pre>
+      </div>
+
+      <div id="result-box" class="hidden">
+        <nav class="tabs" id="tabs">
+          <button class="tab active" data-tab="core">核心可视化</button>
+          <button class="tab" data-tab="heatmap">浓度热力云图</button>
+          <button class="tab" data-tab="anim">扩散动画</button>
+          <button class="tab" data-tab="sensors">传感器读数</button>
+          <button class="tab" data-tab="metrics">云团特征</button>
+          <button class="tab" data-tab="files">文件下载</button>
+        </nav>
+
+        <div id="summary-line" class="summary-line"></div>
+
+        <div class="tab-pane" id="tab-core">
+          <h3>核心可视化（四时刻）</h3>
+          <div class="img-wrap"><img id="img-core-all" alt="核心可视化四时刻"></div>
+          <h3>核心可视化（末时刻大图）</h3>
+          <div class="img-wrap"><img id="img-core-hero" alt="核心可视化末时刻"></div>
+          <p class="note">图中包含：四传感器点位（绿=正常 / 红=告警）、半透明重气云团（浅黄→橙→深红对应低→中→高浓度）、
+            1/10/100 ppm 等值线（警戒/危险/毒性阈值边界）、红色实线核心应急隔离区、黄色虚线警戒疏散区域、蓝色疏散箭头。</p>
+        </div>
+
+        <div class="tab-pane hidden" id="tab-heatmap">
+          <h3>浓度热力云图（1 / 3 / 5 / 15 分钟）</h3>
+          <div class="img-wrap"><img id="img-heatmap" alt="浓度热力云图"></div>
+        </div>
+
+        <div class="tab-pane hidden" id="tab-anim">
+          <h3>H2S 云团扩散动态动画</h3>
+          <div class="img-wrap"><img id="img-anim" alt="扩散动画"></div>
+          <p class="note">动画展示水平足迹与中心线垂直剖面随时间演变（对数浓度刻度）。</p>
+        </div>
+
+        <div class="tab-pane hidden" id="tab-sensors">
+          <h3>四传感器浓度预测（ppm）</h3>
+          <div class="table-wrap"><table id="tbl-sensors" class="data-table"></table></div>
+          <p class="note">告警阈值 10 ppm：绿色=正常，红色=告警。传感器布局：S1 正北、S2 正西、S3 正南、S4 正东，距井口可调。</p>
+        </div>
+
+        <div class="tab-pane hidden" id="tab-metrics">
+          <h3>分时段云团特征汇总</h3>
+          <div class="table-wrap"><table id="tbl-metrics" class="data-table"></table></div>
+          <p class="note">云团边界取 1 ppm（TLV 参考阈值）；厚度为云团最大高度；宽度为最大横向铺展；面积为 1 ppm 覆盖范围。</p>
+        </div>
+
+        <div class="tab-pane hidden" id="tab-files">
+          <h3>结果文件下载</h3>
+          <ul id="file-list" class="file-list"></ul>
+        </div>
+      </div>
+
+      <div id="empty-box" class="empty-box">
+        <p>输入参数后点击「开始计算」，结果将在此展示。</p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>平台基于美国 SLAB 重气扩散模型（Slab.exe + 浓度场重构）开发，结果用于风险评估与应急决策参考。</p>
+</footer>
+
+<script src="/static/app.js?v=2"></script>
+</body>
 </html>

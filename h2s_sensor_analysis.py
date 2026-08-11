@@ -28,6 +28,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
 import matplotlib.colors as mcolors
+from matplotlib.ticker import MultipleLocator
 
 from slab_h2s_lib import (H2S_PROPS, SlabField, default_h2s_params,
                           parse_predict, run_slab, write_slab_input)
@@ -150,7 +151,13 @@ def build_input(params, path="h2s_sensor_input.txt"):
               "ta", "rh", "stab", "z0", "tav", "xffm"):
         p[k] = params[k]
     p["zp1"] = params["zp"]
-    write_slab_input(p, path, props=H2S_PROPS)
+    gas_props = dict(H2S_PROPS)
+    for k in ("wms", "tbp", "rhosl", "dhe", "cps", "cpsl"):
+        if k in params and params[k] is not None:
+            gas_props[k] = params[k]
+    if "tbp" in params and params["tbp"] is not None:
+        p["ts"] = params["tbp"]
+    write_slab_input(p, path, props=gas_props)
     return path
 
 
@@ -348,6 +355,21 @@ def fig_sensor_map(params, path):
                      np.max(np.abs([s["N"] for s in params["sensors"]] + [0])))
     ax.set_xlim(-lim, lim)
     ax.set_ylim(-lim, lim)
+    # ?????
+    plot_range = 2 * lim
+    raw_step = plot_range / 8.0
+    mag = 10 ** int(np.floor(np.log10(max(raw_step, 1.0))))
+    frac = raw_step / mag
+    if frac <= 1.5:
+        major = mag
+    elif frac <= 3.5:
+        major = 2 * mag
+    elif frac <= 7.5:
+        major = 5 * mag
+    else:
+        major = 10 * mag
+    ax.xaxis.set_major_locator(MultipleLocator(major))
+    ax.yaxis.set_major_locator(MultipleLocator(major))
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)

@@ -2,13 +2,36 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const defaults = { jet_d: "0.25", jet_h: "2.0",
+const defaults = { jet_d: "0.25", jet_h: "2.0", sensor_dist: "60",
   qs: "1.0", tsd_min: "15", as_: "100", idspl: "1",
   ua: "3.0", wind_dir_sel: "225", wind_dir: "225",
   ta_c: "27", press: "1013.25", rh: "60", stab: "D",
   zp: "1.5", times: "1,3,5,15", make_anim: true, anim_min: "15"
 };
 
+
+
+const gasPresets = {
+  h2s:     { wms: "0.034081", tbp: "213", rhosl: "949", dhe_kj: "548",  cps: "1010", cpsl: "1800" },
+  nh3:     { wms: "0.017031", tbp: "239", rhosl: "682", dhe_kj: "1371", cps: "2060", cpsl: "4520" },
+  cl2:     { wms: "0.070906", tbp: "239", rhosl: "1560", dhe_kj: "288",  cps: "482",  cpsl: "947" },
+  so2:     { wms: "0.064066", tbp: "263", rhosl: "1460", dhe_kj: "389",  cps: "626",  cpsl: "1349" },
+  propane: { wms: "0.044096", tbp: "231", rhosl: "583", dhe_kj: "426",  cps: "1680", cpsl: "2230" },
+  butane:  { wms: "0.058123", tbp: "272", rhosl: "602", dhe_kj: "388",  cps: "1660", cpsl: "2280" },
+};
+
+function syncGasPreset() {
+  const el = document.getElementById("gas_preset");
+  if (!el) return;
+  const sel = el.value;
+  if (sel === "custom") return;
+  const p = gasPresets[sel];
+  if (!p) return;
+  for (const [k, v] of Object.entries(p)) {
+    const e = document.getElementById(k);
+    if (e) e.value = v;
+  }
+}
 let currentJob = null;
 let pollTimer = null;
 
@@ -44,7 +67,10 @@ function collectParams() {
     wind_dir: windSel === "custom" ? $("wind_dir").value : windSel,
     ta_c: $("ta_c").value, press: $("press").value, rh: $("rh").value,
     stab: $("stab").value, zp: $("zp").value, times: $("times").value.replace(/[，、；;]/g, ",").replace(/\s+/g, ""),
-    make_anim: $("make_anim").checked, anim_min: $("anim_min").value
+    make_anim: $("make_anim").checked, anim_min: $("anim_min").value,
+    sensor_dist: $("sensor_dist").value,
+    wms: $("wms").value, tbp: $("tbp").value, rhosl: $("rhosl").value,
+    dhe_kj: $("dhe_kj").value, cps: $("cps").value, cpsl: $("cpsl").value
   };
 }
 
@@ -220,6 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
   resetForm();
   syncSourceType();
   $("idspl").addEventListener("change", syncSourceType);
+  $("gas_preset").addEventListener("change", syncGasPreset);
   $("wind_dir_sel").addEventListener("change", syncWindDir);
   $("btn-run").addEventListener("click", runJob);
   $("btn-reset").addEventListener("click", () => { resetForm(); setStatus(false); });
